@@ -16,9 +16,9 @@ import starling.text.BitmapChar;
 import starling.text.TextDisplay;
 import starling.text.util.CharacterHelper;
 
-/*#if starling2
+//#if starling2
 	import starling.utils.Align;
-#else*/
+//#else
 	import starling.utils.HAlign;
 	import starling.utils.VAlign;
 //#end

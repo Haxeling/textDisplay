@@ -16,7 +16,7 @@ import starling.text.display.Caret;
 import starling.text.display.ClipMask;
 import starling.text.display.Highlight;
 import starling.text.display.HitArea;
-//import starling.text.control.input.EventForwarder;
+import starling.text.control.input.EventForwarder;
 import starling.text.control.input.SoftKeyboardIO;
 import starling.text.display.TargetBounds;
 import starling.text.model.content.ContentModel;
@@ -32,7 +32,7 @@ import starling.text.util.CharRenderer;
 import starling.text.util.FormatParser;
 
 #if starling2
-
+	import starling.utils.Align;
 #else
 	import starling.utils.HAlign;
 	import starling.utils.VAlign;
@@ -69,7 +69,7 @@ class TextDisplay extends DisplayObjectContainer
 	private var mouseInput:MouseInput;
 	private var softKeyboardIO:SoftKeyboardIO;
 	private var historyControl:HistoryControl;
-	//private var eventForwarder:EventForwarder;
+	private var eventForwarder:EventForwarder;
 	private var clickFocus:ClickFocus;
 	
 	@:isVar public var color(get, set):Int = 0xFFFFFFFF;
@@ -182,7 +182,7 @@ class TextDisplay extends DisplayObjectContainer
 	
 	function createIO() 
 	{
-		//eventForwarder = new EventForwarder(this);
+		eventForwarder = new EventForwarder(this);
 		softKeyboardIO = new SoftKeyboardIO(this);
 	}
 	
@@ -296,7 +296,7 @@ class TextDisplay extends DisplayObjectContainer
 		if (!allowLineBreaks) v = FormatParser.removeLineBreaks(v);
 		
 		if (maxCharacters != null) {
-			if (v.length >= maxCharacters) v = v.substr(0, maxCharacters - ellipsis.length) + ellipsis;
+			if (v.length >= maxCharacters) v = v.substr(0, maxCharacters /*- ellipsis.length*/) /*+ ellipsis*/;
 		}
 		contentModel.nodes = FormatParser.textAndFormatToNodes(v, defaultFormat);
 		this.value = FormatParser.nodesToPlainText(contentModel.nodes);
@@ -321,8 +321,8 @@ class TextDisplay extends DisplayObjectContainer
 		
 		if (maxCharacters != null) {
 			if (value.length >= maxCharacters) {
-				FormatParser.removeAfterIndex(contentModel.nodes, maxCharacters - ellipsis.length);
-				v = FormatParser.nodesToPlainText(contentModel.nodes) + ellipsis;
+				FormatParser.removeAfterIndex(contentModel.nodes, maxCharacters /*- ellipsis.length*/);
+				v = FormatParser.nodesToPlainText(contentModel.nodes) /*+ ellipsis*/;
 				contentModel.nodes = FormatParser.htmlToNodes(v);
 				this.value = v;
 			}
@@ -485,7 +485,7 @@ class TextDisplay extends DisplayObjectContainer
 			
 			createControllers();
 			
-			//eventForwarder.active = hasFocus;
+			eventForwarder.active = hasFocus;
 			keyboardInput.active = keyboardShortcuts.active = caret.active = hasFocus;
 			mouseInput.active = true;
 			highlight.visible = true;
@@ -493,7 +493,7 @@ class TextDisplay extends DisplayObjectContainer
 			
 		}
 		else {
-			//eventForwarder.active = false;
+			eventForwarder.active = false;
 			if (keyboardInput != null) keyboardInput.active = false;
 			if (keyboardShortcuts != null) keyboardShortcuts.active = false;
 			if (mouseInput != null) mouseInput.active = false;

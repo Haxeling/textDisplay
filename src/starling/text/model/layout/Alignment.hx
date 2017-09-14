@@ -4,14 +4,14 @@ import starling.events.Event;
 import starling.events.EventDispatcher;
 
 
-#if starling2
+//#if starling2
 	import starling.utils.Align;
-	typedef HAlign = Align;
-	typedef VAlign = Align;
-#else
+	//typedef HAlign = Align;
+	//typedef VAlign = Align;
+//#else
 	import starling.utils.HAlign;
 	import starling.utils.VAlign;
-#end
+//#end
 
 /**
  * ...
