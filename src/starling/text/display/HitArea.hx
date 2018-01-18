@@ -16,7 +16,7 @@ class HitArea extends Sprite
 	private var _height:Null<Float>;
 	private var background:Quad;
 	var textDisplay:TextDisplay;
-	var border:Canvas;
+	//var border:Canvas;
 	var textBounds = new Rectangle(0,0,100,100);
 	
 	@:isVar public var showBorder(default, set):Bool = false;
@@ -31,9 +31,9 @@ class HitArea extends Sprite
 		addChild(background);
 		background.alpha = 0;
 		
-		border = new Canvas();
-		addChild(border);
-		border.visible = false;
+		//border = new Canvas();
+		//addChild(border);
+		//border.visible = false;
 		
 		textDisplay.charLayout.addEventListener(Event.CHANGE, OnLayoutChange);
 		OnLayoutChange(null);
@@ -41,6 +41,11 @@ class HitArea extends Sprite
 	
 	private function OnLayoutChange(e:Event):Void 
 	{
+		//#if js
+			if (this.parent == null) {
+				return;
+			}
+		//#end
 		textBounds.setTo(textDisplay.targetBounds.x, textDisplay.targetBounds.y, textDisplay.targetBounds.width, textDisplay.targetBounds.height);
 		
 		background.x = textBounds.x;
@@ -49,21 +54,22 @@ class HitArea extends Sprite
 		background.height = textBounds.height;
 		if (background.width < 10) background.width = 10;
 		if (background.height < 10) background.height = 10;
-		updateBorder();
+		//updateBorder();
 	}
 	
-	private function updateBorder() 
-	{
-		border.clear();
-		border.beginFill(0xFF0000);
-		border.drawRectangle(textBounds.x, textBounds.y, width, borderThinkness);
-		border.drawRectangle(textBounds.x, textBounds.y + height - borderThinkness, width, borderThinkness);
-		border.drawRectangle(textBounds.x, textBounds.y + borderThinkness, borderThinkness, height - (borderThinkness * 2));
-		border.drawRectangle(textBounds.x + width - borderThinkness, textBounds.y + borderThinkness, borderThinkness, height - (borderThinkness * 2));
-	}
+	//private function updateBorder() 
+	//{
+		//border.clear();
+		//border.beginFill(0xFF0000);
+		//border.drawRectangle(textBounds.x, textBounds.y, width, borderThinkness);
+		//border.drawRectangle(textBounds.x, textBounds.y + height - borderThinkness, width, borderThinkness);
+		//border.drawRectangle(textBounds.x, textBounds.y + borderThinkness, borderThinkness, height - (borderThinkness * 2));
+		//border.drawRectangle(textBounds.x + width - borderThinkness, textBounds.y + borderThinkness, borderThinkness, height - (borderThinkness * 2));
+	//}
 	
 	private function set_showBorder(value:Bool):Bool
 	{
-		return border.visible = value;
+		return value;
+		//return border.visible = value;
 	}
 }
