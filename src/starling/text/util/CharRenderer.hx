@@ -32,11 +32,12 @@ import starling.textures.Texture;
 
 class CharRenderer
 {
-	
+	var color:Null<UInt> = null;
 	private var textDisplay:TextDisplay;
 	private var images = new Array<Image>();
 	private var quadBatches:Map<String, QuadBatch> = new Map();
 	private var lineQuads = new Array<Quad>();
+	var characters:Array<Char>;
 
 	@:allow(starling.text)
 	private function new(textDisplay:TextDisplay)
@@ -46,14 +47,20 @@ class CharRenderer
 	
 	public function setColor(value:UInt):Void
 	{
+		#if starling2
 		for (quadBatch in quadBatches) 
 		{
 			quadBatch.color = value;
 		}
+		#else
+			color = value;
+			if (characters != null) render(characters);
+		#end
 	}
 	
 	public function render(characters:Array<Char>) 
 	{
+		this.characters = characters;
 		for(quadBatch in quadBatches){
 			#if starling2
 				quadBatch.clear();
@@ -84,7 +91,8 @@ class CharRenderer
 						image.x = Math.round(char.x);
 						image.y = Math.round(char.y);
 						
-						image.color = char.charFormat.format.color;
+						if (color == null) image.color = char.charFormat.format.color;
+						else image.color = color;
 						
 						image.touchable = false;
 						images.push(image);
@@ -106,8 +114,6 @@ class CharRenderer
 				}
 			}
 		}
-		
-		setColor(textDisplay.color);
 	}
 	
 	public function dispose() 
