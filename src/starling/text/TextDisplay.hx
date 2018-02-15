@@ -121,6 +121,7 @@ class TextDisplay extends DisplayObjectContainer
 	
 	@:isVar public static var focus(get, set):TextDisplay = null;
 	static var focusDispatcher = new EventDispatcher();
+	@:isVar public var useSoftKeyboard(get, set):Bool = true;
 	
 	public function new(width:Null<Float>=null, height:Null<Float>=null) 
 	{
@@ -586,5 +587,16 @@ class TextDisplay extends DisplayObjectContainer
 	{
 		charRenderer.setColor(value);
 		return color = value;
+	}
+	
+	function get_useSoftKeyboard():Bool 
+	{
+		return useSoftKeyboard;
+	}
+	
+	function set_useSoftKeyboard(value:Bool):Bool 
+	{
+		
+		return useSoftKeyboard = softKeyboardIO.active = value;
 	}
 }

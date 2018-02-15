@@ -15,6 +15,7 @@ import starling.text.TextDisplay;
 @:access(starling.text)
 class SoftKeyboardIO
 {
+	@:isVar public var active(get, set):Bool = true;
 	private var textDisplay:TextDisplay;
 	private static var nativeTextField:TextField;
 
@@ -27,7 +28,7 @@ class SoftKeyboardIO
 			nativeTextField = new TextField();
 			nativeTextField.y = -1000000; // place off stage
 			nativeTextField.type = TextFieldType.INPUT;
-			nativeTextField.needsSoftKeyboard = true;
+			nativeTextField.needsSoftKeyboard = active;
 			Starling.current.nativeStage.addChild(nativeTextField);
 		}
 		
@@ -36,9 +37,23 @@ class SoftKeyboardIO
 	
 	private function OnFocusChange(e:starling.events.Event):Void 
 	{
+		if (!active) return;
 		if (textDisplay.hasFocus) {
 			//nativeTextField.text = "";
 			nativeTextField.requestSoftKeyboard();
 		}
+	}
+	
+	function get_active():Bool 
+	{
+		return active;
+	}
+	
+	function set_active(value:Bool):Bool 
+	{
+		if (nativeTextField == null) {
+			nativeTextField.needsSoftKeyboard = value;
+		}
+		return active = value;
 	}
 }
