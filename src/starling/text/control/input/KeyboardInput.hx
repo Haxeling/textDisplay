@@ -4,6 +4,7 @@ import com.imagination.delay.Delay;
 import com.imagination.util.signals.Signal.Signal0;
 import com.imagination.util.signals.Signal.Signal1;
 import openfl.ui.Keyboard;
+import starling.events.Event;
 import starling.text.model.layout.CharLayout;
 import starling.text.model.selection.Selection;
 import openfl.desktop.Clipboard;
@@ -40,8 +41,10 @@ class KeyboardInput
 	{
 		if (e.isDefaultPrevented()) return;
 		
-		//trace(e.charCode+" "+e.keyCode);
+		
+		trace(e.charCode+" "+e.keyCode);
 		if (e.keyCode == Keyboard.DELETE) delete();
+		else if (e.keyCode == Keyboard.ENTER) enter();
 		else if (e.keyCode == Keyboard.BACKSPACE) backspace();
 		else if (e.charCode == 118 && e.ctrlKey) paste();
 		else if (e.charCode == 99 && e.ctrlKey) copy();
@@ -55,6 +58,12 @@ class KeyboardInput
 				addChars(String.fromCharCode(e.charCode));
 			#end
 		}
+	}
+	
+	function enter() 
+	{
+		// Do nothing
+		textDisplay.dispatchEvent(new Event("enter"));
 	}
 	
 	#if js
