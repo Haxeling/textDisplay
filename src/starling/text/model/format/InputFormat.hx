@@ -7,11 +7,12 @@ import starling.text.BitmapFont;
  */
 class InputFormat
 {
-	public var size:Null<Float> = 200;
+	public var size:Null<Float>;
 	public var face:Null<String>;
-	public var color:Null<UInt> = 0xFFFFFF;
+	public var color:Null<UInt>;
 	public var kerning:Null<Float>; // letter spacing
 	public var leading:Null<Float>; // line spacing
+	public var baseline:Null<Float>; // offset baseline
 	public var textTransform:TextTransform;
 	public var href:String;
 	
@@ -22,7 +23,7 @@ class InputFormat
 		this.color = color;
 		this.kerning = kerning;
 		this.leading = leading;
-		if (textTransform != null) this.textTransform = textTransform;
+		this.textTransform = textTransform;
 		this.href = href;
 	}
 	
@@ -34,6 +35,7 @@ class InputFormat
 		returnVal += "color = " + StringTools.hex(color, 6) + "\n";
 		returnVal += "kerning = " + kerning + "\n";
 		returnVal += "leading = " + leading + "\n";
+		returnVal += "baseline = " + baseline + "\n";
 		returnVal += "textTransform = " + textTransform + "\n";
 		returnVal += "href = " + href + "\n";
 		return returnVal;
@@ -47,8 +49,35 @@ class InputFormat
 		inputFormat.color = this.color;
 		inputFormat.kerning = this.kerning;
 		inputFormat.leading = this.leading;
+		inputFormat.baseline = this.baseline;
 		inputFormat.textTransform = this.textTransform;
 		inputFormat.href = this.href;
 		return inputFormat;
+	}
+	
+	public function clear():Void
+	{
+		size = null;
+		face = null;
+		color = null;
+		kerning = null;
+		leading = null;
+		baseline = null;
+		textTransform = null;
+		href = null;
+	}
+	
+	
+	public function isClear() 
+	{
+		return 
+			size == null
+		&&	face == null
+		&&	color == null
+		&&	kerning == null
+		&&	leading == null
+		&&	baseline == null
+		&&	textTransform == null
+		&&	href == null;
 	}
 }

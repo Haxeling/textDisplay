@@ -1,7 +1,6 @@
 package starling.text.util;
 
 import haxe.ds.StringMap;
-import openfl.errors.Error;
 import starling.text.model.format.InputFormat;
 import starling.text.model.layout.Char;
 import starling.text.util.FormatParser.FormatNode;
@@ -13,26 +12,36 @@ import starling.utils.SpecialChar;
  */
 class FormatParser
 {
-	public function new() 
-	{
-		
-	}
+	static var NodePool:Array<FormatNode> = [];
+	//static var AttPool:Array<FormatAttribute> = [];
 	
-	/*static public function htmlToPlainText(html:String):String
+	
+	public static function recycleNodes(nodes:Array<FormatNode>):Void
 	{
-		var xml:Xml = clearString(html);
-		var nodes:Array<FormatNode> = convert(xml);
-		return plainText(nodes);
-	}*/
+		for(node in nodes){
+			NodePool.push(node);
+			recycleNodes(node.children);
+			node.clear();
+		}
+	}
 	
 	public static function textAndFormatToNodes(v:String, format:InputFormat):Array<FormatNode>
 	{
-		var formatNode = new FormatNode();
+		var formatNode = newFormatNode();
 		formatNode.value = v;
 		formatNode.format = format;
 		formatNode.startIndex = 0;
 		formatNode.endIndex = v.length;
 		return [formatNode];
+	}
+	
+	static private function newFormatNode() 
+	{
+		if (NodePool.length > 0){
+			return NodePool.pop();
+		}else{
+			return new FormatNode();
+		}
 	}
 	
 	public static function htmlToNodes(v:String):Array<FormatNode>
@@ -66,6 +75,9 @@ class FormatParser
 							previousChildNode.value += childNode.value;
 							previousChildNode.endIndex = childNode.endIndex;
 							node.children.splice(j, 1);
+							
+							childNode.clear();
+							NodePool.push(childNode);
 						}
 					}
 					j--;
@@ -86,6 +98,7 @@ class FormatParser
 		if (format1.size != format2.size) return false;
 		if (format1.leading != format2.leading) return false;
 		if (format1.kerning != format2.kerning) return false;
+		if (format1.baseline != format2.baseline) return false;
 		if (format1.textTransform != format2.textTransform) return false;
 		if (format1.href != format2.href) return false;
 		return true;
@@ -98,7 +111,7 @@ class FormatParser
 		{
 			var node:FormatNode = nodes[i];
 			if (node.children.length == 1 && node.parent != null) {
-				if (isEmptyFormat(node.children[0].format) && node.children[0].children.length == 0) {
+				if (node.children[0].format.isClear() && node.children[0].children.length == 0) {
 					node.value = node.children[0].value;
 					node.children.splice(0, 1);
 				}
@@ -114,17 +127,18 @@ class FormatParser
 		}
 	}
 	
-	static private function isEmptyFormat(inputFormat:InputFormat):Bool
+	/*static private function isEmptyFormat(inputFormat:InputFormat):Bool
 	{
 		if (inputFormat.color != null) return false;
 		if (inputFormat.face != null) return false;
 		if (inputFormat.kerning != null) return false;
+		if (inputFormat.baseline != null) return false;
 		if (inputFormat.leading != null) return false;
 		if (inputFormat.textTransform != null) return false;
 		if (inputFormat.size != null) return false;
 		if (inputFormat.href != null) return false;
 		return true;
-	}
+	}*/
 	
 	/*public static function nodesToFormats(nodes:Array<FormatNode>):Array<FormatLength>
 	{
@@ -243,13 +257,14 @@ class FormatParser
 	
 	static function xmlToNodes(xml:Xml, parent:FormatNode):FormatNode
 	{
-		var node:FormatNode = new FormatNode();
+		var node:FormatNode = newFormatNode();
 		node.parent = parent;
 		
 		if (xml.nodeType == Xml.Element) {
 			
-			node.attributes = getAttributes(xml);
-			node.format = createFormat(node.attributes);
+			//node.attributes = getAttributes(xml);
+			//node.format = createFormat(xml);
+			fillFormat(node.format, xml);
 			
 			for (child in xml.iterator()) 
 			{
@@ -263,12 +278,30 @@ class FormatParser
 			node.value = xml.nodeValue;
 		}
 		
-		if (node.value == null && node.attributes.length == 0 && node.children.length == 1) {
+		if (node.value == null && node.format.isClear() && node.children.length == 1) {
 			node.children[0].parent = node.parent;
 			return node.children[0];
 		}
 		
 		return node;
+	}
+	static private function fillFormat(format:InputFormat, xml:Xml):Void
+	{
+		for (key in xml.attributes()) 
+		{
+			var value = xml.get(key);
+			key = key.toLowerCase();
+			
+			switch(key){
+				case "color": format.color = Std.parseInt("0x" + value.split("#").join(""));
+				case "face": format.face = value;
+				case "size": format.size = Std.parseFloat(value);
+				case "kerning": format.kerning = Std.parseFloat(value);
+				case "baseline": format.baseline = Std.parseFloat(value);
+				case "leading": format.leading = Std.parseFloat(value);
+				case "href": format.href = value;
+			}
+		}
 	}
 	
 	//static function convert(xml:Xml, parent:FormatNode):Array<FormatNode>
@@ -277,7 +310,7 @@ class FormatParser
 		//var nodes:Array<FormatNode> = [];
 		//for (child in xml.iterator()) 
 		//{
-			//var node:FormatNode = new FormatNode();
+			//var node:FormatNode = newFormatNode();
 			//node.parent = parent;
 			//
 			//if (child.nodeType == Xml.Element) {
@@ -316,7 +349,7 @@ class FormatParser
 							//}
 						//}
 						//else {
-							//var childNode = new FormatNode();
+							//var childNode = newFormatNode();
 							//childNode.value = cast(children[j].nodeValue, String);
 							//childNode.parent = node;
 							//childNode.format = new InputFormat();
@@ -340,7 +373,7 @@ class FormatParser
 		//return nodes;
 	//}
 	
-	static private function createFormat(formatAttribute:Array<FormatAttribute>):InputFormat
+	/*static private function createFormat(formatAttribute:Array<FormatAttribute>):InputFormat
 	{
 		
 		var inputFormat = new InputFormat();
@@ -352,16 +385,17 @@ class FormatParser
 			
 			if (propName.toLowerCase() == "color") 			Reflect.setField(inputFormat, propName, Std.parseInt("0x" + propValue.split("#").join("")));
 			else if (propName.toLowerCase() == "face")		Reflect.setField(inputFormat, propName, propValue);
-			else if (propName.toLowerCase() == "size")		Reflect.setField(inputFormat, propName, Std.parseInt(propValue));
-			else if (propName.toLowerCase() == "kerning")	Reflect.setField(inputFormat, propName, Std.parseInt(propValue));
-			else if (propName.toLowerCase() == "leading")	Reflect.setField(inputFormat, propName, Std.parseInt(propValue));
+			else if (propName.toLowerCase() == "size")		Reflect.setField(inputFormat, propName, Std.parseFloat(propValue));
+			else if (propName.toLowerCase() == "kerning")	Reflect.setField(inputFormat, propName, Std.parseFloat(propValue));
+			else if (propName.toLowerCase() == "baseline")	Reflect.setField(inputFormat, propName, Std.parseFloat(propValue));
+			else if (propName.toLowerCase() == "leading")	Reflect.setField(inputFormat, propName, Std.parseFloat(propValue));
 			else if (propName.toLowerCase() == "href")		Reflect.setField(inputFormat, propName, propValue);
 			
 		}
 		return inputFormat;
-	}
+	}*/
 	
-	static private function getAttributes(child:Xml):Array<FormatAttribute>
+	/*static private function getAttributes(child:Xml):Array<FormatAttribute>
 	{
 		var formatAttribute = new Array<FormatAttribute>();
 		for (key in child.attributes()) 
@@ -369,7 +403,7 @@ class FormatParser
 			formatAttribute.push(new FormatAttribute(key, child.get(key)));
 		}
 		return formatAttribute;
-	}
+	}*/
 	
 	
 	public static function nodesToHtml(value:Array<FormatNode>):String
@@ -410,14 +444,30 @@ class FormatParser
 	
 	private static function createStartTag(formatNode:FormatNode):String
 	{
-		var atts:String = "";
+		/*var atts:String = "";
 		atts += "<" + formatNode.name;
 		for (i in 0...formatNode.attributes.length) 
 		{
 			atts += " " + formatNode.attributes[i].key + "='" + formatNode.attributes[i].value + "'";
 		}
 		atts += ">";
-		return atts;
+		return atts;*/
+		
+		var format:InputFormat = formatNode.format;
+		
+		
+		var returnVal:String = "<" + formatNode.name;
+		
+		if(format.face != null) returnVal += "face=" + format.face;
+		if(format.size != null) returnVal += "size=" + format.size;
+		if(format.color != null) returnVal += "color=" + StringTools.hex(format.color, 6);
+		if(format.kerning != null) returnVal += "kerning=" + format.kerning;
+		if(format.leading != null) returnVal += "leading=" + format.leading;
+		if(format.baseline != null) returnVal += "baseline=" + format.baseline;
+		if(format.textTransform != null) returnVal += "textTransform=" + format.textTransform;
+		if(format.href != null) returnVal += "href=" + format.href;
+			
+		return returnVal + ">";
 	}
 	
 	static private function createEndTag(formatNode:FormatNode) 
@@ -533,6 +583,7 @@ class FormatParser
 		if (inputFormat.face != null) atts += " face='" + inputFormat.face + "'";
 		if (inputFormat.kerning != null && inputFormat.kerning != 0) atts += " kerning='" + inputFormat.kerning + "'";
 		if (inputFormat.leading != null && inputFormat.leading != 0) atts += " leading='" + inputFormat.leading + "'";
+		if (inputFormat.baseline != null && inputFormat.baseline != 0) atts += " baseline='" + inputFormat.baseline + "'";
 		if (inputFormat.textTransform != null) atts += " transform='" + inputFormat.textTransform + "'";
 		if (inputFormat.href != null) atts += " href='" + inputFormat.href + "'";
 		if (inputFormat.size != null) atts += " size='" + inputFormat.size + "'";
@@ -557,7 +608,7 @@ class FormatParser
 		for (j in begin...end) 
 		{
 			var char:Char = textDisplay.contentModel.characters[j];
-			copyCommonValues(returnFormat, incompatibleCheck, char.charFormat.format);
+			copyCommonValues(returnFormat, incompatibleCheck, char.format);
 		}
 		
 		return returnFormat;
@@ -581,6 +632,10 @@ class FormatParser
 		if (copyFrom.kerning != null) {
 			if (copyTo.kerning == null && incompatible.kerning == null) copyTo.kerning = incompatible.kerning = copyFrom.kerning;
 			else if (copyTo.kerning != copyFrom.kerning) copyTo.kerning = null;
+		}
+		if (copyFrom.baseline != null) {
+			if (copyTo.baseline == null && incompatible.baseline == null) copyTo.baseline = incompatible.baseline = copyFrom.baseline;
+			else if (copyTo.baseline != copyFrom.baseline) copyTo.baseline = null;
 		}
 		if (copyFrom.leading != null) {
 			if (copyTo.leading == null && incompatible.leading == null) copyTo.leading = incompatible.leading = copyFrom.leading;
@@ -631,18 +686,18 @@ class FormatNode
 	
 	public var parent:FormatNode;
 	public var name:String = "font";
-	public var attributes = new Array<FormatAttribute>();
+	//public var attributes = new Array<FormatAttribute>();
 	public var children = new Array<FormatNode>();
-	public var format = new InputFormat();
+	public var format:InputFormat = new InputFormat();
 	
 	public function new()
 	{
 		
 	}
 	
-	public function clone():FormatNode
+	/*public function clone():FormatNode
 	{
-		var formatNode:FormatNode = new FormatNode();
+		var formatNode:FormatNode = newFormatNode();
 		formatNode.parent = this.parent;
 		formatNode.name = this.name;
 		formatNode.value = this.value;
@@ -652,7 +707,7 @@ class FormatNode
 		formatNode.endIndex = this.endIndex;
 		formatNode.format = this.format;
 		return formatNode;
-	}
+	}*/
 	
 	function get_value():String 
 	{
@@ -694,9 +749,21 @@ class FormatNode
 		if (endIndex < 0) endIndex = 0;
 		return endIndex;
 	}
+	
+	public function clear(){
+			
+		value = null;
+		startIndex = 0;
+		endIndex = 0;
+		parent = null;
+		name = "font";
+		//attributes = new Array<FormatAttribute>();
+		children = [];
+		format.clear();
+	}
 }
 
-class FormatAttribute
+/*class FormatAttribute
 {
 	public var key:String;
 	public var value:String;
@@ -712,4 +779,4 @@ typedef OutputTag =
 {
 	index:Int,
 	value:String
-}
+}*/

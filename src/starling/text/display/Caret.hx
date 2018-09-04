@@ -53,6 +53,7 @@ class Caret extends DisplayObjectContainer
 		timer = new Timer(500, 0);
 		timer.addEventListener(TimerEvent.TIMER, OnTick);
 		
+		OnSelectionChange(null);
 	}
 	
 	private function OnTick(e:TimerEvent):Void 
@@ -145,8 +146,8 @@ class Caret extends DisplayObjectContainer
 		
 		if (selectedChar == null) return selectedChar;
 		
-		this.format = selectedChar.charFormat.format.clone();
-		this.font = selectedChar.charFormat.font;
+		this.format = selectedChar.format.clone();
+		this.font = selectedChar.font;
 		quad.color = format.color;
 		return selectedChar;
 	}
